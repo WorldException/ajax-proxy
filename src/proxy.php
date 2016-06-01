@@ -1,6 +1,6 @@
 <?php
 /**
- * 
+ *
  * LICENSE
  *
  * This source file is subject to the new BSD license that is bundled
@@ -22,7 +22,7 @@
  * The heart of the functionality of this script is self-contained, reusable
  *  proxy class. This class could very easily be incorporated into an MVC
  *  framework or set of libraries.
- * 
+ *
  * @todo Finalize licensing above
  * @package IceCube
  * @copyright Copyright (c) 2010 HUGE LLC (http://hugeinc.com)
@@ -40,7 +40,7 @@
  *
  * There is an option to restrict requests so that they can only be made from
  *  certain hostnames or ips in the constructor
- * 
+ *
  * @author Kenny Katzgrau <kkatzgrau@hugeinc.com>
  */
 class AjaxProxy
@@ -156,7 +156,7 @@ class AjaxProxy
             else
                 $this->_allowedHostnames = array($allowed_hostnames);
         }
-        
+
         if($handle_errors)
             $this->_setErrorHandlers();
     }
@@ -230,12 +230,23 @@ class AjaxProxy
             throw new Exception("You must supply a 'route' parameter in the request");
 
         $this->_route = $_GET['route'];
+
+        $this->_route_params = '';
+        foreach ($_GET as  $key => $value){
+            if ($key != "route"){
+                $_start_simbol = "&";
+                if ($this->_route_params == ''){
+                    $_start_simbol = '?';
+                };
+                $this->_route_params = $this->_route_params . $_start_simbol . $key . '=' . $value;
+            }
+        };
     }
 
     /**
      * Get the request body raw from the PHP input stream and store it in the
      *  _requestBody property.
-     * 
+     *
      * There have been concerns with blindly reading the entirety of an input
      *  stream with no maximum length, but this is limited with the maximum
      *  request size in php.ini. Additionally, Zend_Amf_Request_Http does the
@@ -318,7 +329,7 @@ class AjaxProxy
     protected function _loadRawHeaders()
     {
         if($this->_rawHeaders !== NULL) return;
-        
+
         $this->_rawHeaders = getallheaders();
 
         if($this->_rawHeaders === FALSE)
@@ -351,7 +362,7 @@ class AjaxProxy
      */
     protected function _makeRequest()
     {
-        $url = $this->_forwardHost . $this->_route;
+        $url = $this->_forwardHost . $this->_route . $this->_route_params;
 
         # Check for cURL. If it isn't loaded, fall back to fopen()
         if(function_exists('curl_init'))
@@ -415,7 +426,7 @@ class AjaxProxy
      * Given an associative array returned by PHP's methods to get stream meta,
      *  extract the HTTP response header from it
      * @param array $meta The associative array contianing stream information
-     * @return array 
+     * @return array
      */
     protected function _buildResponseHeaderFromMeta($meta)
     {
@@ -493,7 +504,7 @@ class AjaxProxy
         elseif($break_2 && $break_1 === FALSE) $break = $break_2;
         elseif($break_1 < $break_2) $break = $break_1;
         else $break = $break_2;
-        
+
         # Let's check to see if we recieved a header but no body
         if($break === FALSE)
         {
@@ -539,7 +550,7 @@ class AjaxProxy
                 $field = substr($header, 0, $field_end);
                 $value = substr($header, $field_end + 1);
             }
-            
+
             $parsed[$field] = $value;
         }
 
@@ -604,7 +615,7 @@ class AjaxProxy
     protected function _buildAndExecuteProxyResponse()
     {
         $this->_generateProxyResponseHeaders();
-        
+
         $this->_output($this->_responseBody);
     }
 
@@ -615,13 +626,13 @@ class AjaxProxy
      */
     protected function _output($data)
     {
-        echo $data;
+        print($data);
     }
 
     /**
      * Make it so that this class handles it's own errors. This means that
      *  it will register PHP error and exception handlers, and die() if there
-     *  is a problem. 
+     *  is a problem.
      */
     protected function _setErrorHandlers()
     {
